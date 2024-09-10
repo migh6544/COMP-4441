@@ -18,7 +18,7 @@ sample means
 
       * Apply linear regression
   
-  • Derive sound theoretical footing for the methods, where practical, to guide them as they
+  - Derive sound theoretical footing for the methods, where practical, to guide them as they
 
       * Check data requirements
       
