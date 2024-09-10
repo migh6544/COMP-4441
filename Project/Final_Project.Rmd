@@ -1,0 +1,342 @@
+---
+title: "COMP 4441 - Final Project"
+author: "Michael Ghattas"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: pdf_document
+geometry: margin=1in
+latex_engine: xelatex
+extra_dependencies: ["geometry"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy=TRUE)
+```
+
+# Executive Summary
+
+The housing market is a critical component of the economy, and understanding the factors influencing house prices can provide valuable insights for buyers, sellers, and policymakers. This project utilizes the Ames Housing Dataset to identify key determinants of house prices using various statistical methods. The findings offer practical recommendations for market participants and contribute to more informed decision-making.
+
+# Introduction
+
+### Context and Motivation
+
+The real estate market is vital to economic stability and growth. With property values fluctuating based on numerous factors, it's crucial to understand what drives these changes. This analysis focuses on identifying the primary factors influencing house prices within the Ames dataset.
+
+### Research Questions
+
+### - Subject Matter Research Questions:
+
+  - What are the main factors affecting house prices?
+  - How does the age of a house influence its price?
+
+### - Statistical Research Questions:
+
+  - Which variables significantly predict house prices in a regression model?
+  - Is there a statistically significant relationship between the year a house was built and its sale price?
+
+### Summary of Data Source
+
+The dataset used in this analysis is the Ames Housing Dataset, collected from public records between 2006 and 2010. It includes 1,460 observations across 81 variables, with various features detailing the characteristics and sale prices of houses.
+
+### Methods Preview
+
+This study employs multiple linear regression to assess the impact of various predictors on house prices, t-tests to compare house prices based on age groups, and chi-squared tests to examine relationships between categorical variables such as house style and neighborhood.
+
+# Data Understanding & Preparation
+
+### Description of Dataset
+
+  - Link to Dataset: [House Prices Dataset on Kaggle](https://www.kaggle.com/c/house-prices-advanced-regression-techniques/data)
+  - Source: Ames Housing Dataset, aggregated from public records.
+  - Collection Period: 2006-2010.
+  - Number of Observations: 1,460.
+
+### Data Overview
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library('car')
+
+# Load the dataset
+train <- read.csv("train.csv")
+
+# Display basic summary of the dataset
+summary(train)
+```
+# Data Exploration
+
+### Descriptive Statistics
+
+```{r}
+# Descriptive statistics for key variables
+summary(train$SalePrice)
+summary(train$LotArea)
+summary(train$OverallQual)
+```
+### Exploratory Data Visualizations
+
+```{r}
+# Histogram for SalePrice
+ggplot(train, aes(x = SalePrice)) +
+  geom_histogram(binwidth = 10000, fill = "blue", color = "black") +
+  ggtitle("Distribution of Sale Prices") +
+  xlab("Sale Price") +
+  ylab("Frequency")
+
+# Scatter plot of SalePrice vs LotArea
+ggplot(train, aes(x = LotArea, y = SalePrice)) +
+  geom_point(color = "darkgreen") +
+  ggtitle("Sale Price vs Lot Area") +
+  xlab("Lot Area") +
+  ylab("Sale Price")
+
+# Boxplot of SalePrice by OverallQual
+ggplot(train, aes(x = factor(OverallQual), y = SalePrice)) +
+  geom_boxplot(fill = "orange") +
+  ggtitle("Sale Price by Overall Quality") +
+  xlab("Overall Quality") +
+  ylab("Sale Price")
+```
+
+### Exploratory Analysis
+
+The distribution of `SalePrice` is right-skewed, with most homes priced between $100K$ and $300K$. High-quality homes tend to have higher prices, as indicated by the `boxplot` for `OverallQual`. There is a positive correlation between `LotArea` and `SalePrice`, suggesting that larger lots command higher prices.
+
+# Modeling & Analysis
+
+### Multiple Linear Regression
+
+Assumptions:
+
+  - Linearity: The relationship between the predictors and SalePrice should be linear.
+  
+  - Independence: Residuals should be independent.
+  
+  - Homoscedasticity: Residuals should have constant variance.
+  
+  - Normality: Residuals should be approximately normally distributed.
+  
+  - No Multicollinearity: Predictors should not be too highly correlated.
+
+Validation of Assumptions:
+
+```{r}
+# Check for linearity: Plotting SalePrice against each predictor
+par(mfrow = c(1, 3))
+plot(train$LotArea, train$SalePrice, main = "SalePrice vs LotArea", 
+     xlab = "LotArea", ylab = "SalePrice")
+plot(train$OverallQual, train$SalePrice, main = "SalePrice vs OverallQual", 
+     xlab = "OverallQual", ylab = "SalePrice")
+plot(train$YearBuilt, train$SalePrice, main = "SalePrice vs YearBuilt", 
+     xlab = "YearBuilt", ylab = "SalePrice")
+
+# Fit the regression model
+model <- lm(SalePrice ~ LotArea + OverallQual + YearBuilt, data = train)
+
+# Check for independence: Residual plot
+plot(model$fitted.values, rstandard(model), main = "Residuals vs Fitted Values", 
+     xlab = "Fitted Values", ylab = "Standardized Residuals")
+
+# Check for homoscedasticity: Plot residuals vs fitted values
+plot(model$fitted.values, model$residuals, main = "Residuals vs Fitted Values", 
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+
+# Check for normality: QQ plot and Shapiro-Wilk test
+qqnorm(model$residuals)
+qqline(model$residuals, col = "red")
+shapiro.test(model$residuals)
+
+# Check for multicollinearity: Variance Inflation Factor (VIF)
+vif(model)
+```
+Results of the Assumption Checks:
+
+  - Linearity: While `OverallQual` shows a strong linear relationship with `SalePrice`, the nonlinearity in `LotArea` and `YearBuilt` may require transformations for better model fit.
+  
+  - Independence: The residuals appear independent, satisfying this assumption.
+  
+  - Homoscedasticity: The presence of heteroscedasticity suggests that the model may benefit from a transformation of the dependent variable or an alternative modeling approach, such as weighted least squares.
+  
+  - Normality: The significant deviation from normality, as shown by the QQ plot and Shapiro-Wilk test, indicates that the residuals are not normally distributed. A log transformation of SalePrice or another appropriate transformation may improve the normality of residuals.
+  
+  - Multicollinearity: No multicollinearity issues are present, as indicated by the low VIF values.
+
+Apply Log Transformation, Re-run the Model, and Check the Assumptions:
+
+```{r}
+# Apply log transformation to SalePrice
+train$log_SalePrice <- log(train$SalePrice)
+# Re-run the regression model using the log-transformed SalePrice
+log_model <- lm(log_SalePrice ~ LotArea + OverallQual + YearBuilt, data = train)
+
+# Check for linearity: Plotting log_SalePrice against each predictor
+par(mfrow = c(1, 3))
+plot(train$LotArea, train$log_SalePrice, main = "log(SalePrice) vs LotArea", 
+     xlab = "LotArea", ylab = "log(SalePrice)")
+plot(train$OverallQual, train$log_SalePrice, main = "log(SalePrice) vs OverallQual", 
+     xlab = "OverallQual", ylab = "log(SalePrice)")
+plot(train$YearBuilt, train$log_SalePrice, main = "log(SalePrice) vs YearBuilt", 
+     xlab = "YearBuilt", ylab = "log(SalePrice)")
+
+# Check for independence and homoscedasticity: Residual plots
+par(mfrow = c(1, 2))
+plot(log_model$fitted.values, rstandard(log_model), main = "Residuals vs Fitted Values", 
+     xlab = "Fitted Values", ylab = "Standardized Residuals")
+plot(log_model$fitted.values, log_model$residuals, main = "Residuals vs Fitted Values", 
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+
+# Check for normality: QQ plot and Shapiro-Wilk test
+qqnorm(log_model$residuals)
+qqline(log_model$residuals, col = "red")
+shapiro.test(log_model$residuals)
+
+# Check for multicollinearity: VIF
+vif(log_model)
+
+# Summary of the log-transformed model
+summary(log_model)
+```
+Results of the Assumption Checks:
+
+The log transformation improved the linearity of the relationships, particularly for `LotArea` and `YearBuilt`, making the model assumptions more aligned with the data. The improvement in the spread of residuals indicates the log transformation has mitigated the heteroscedasticity issue observed in the original model. The residuals now exhibit more constant variance, satisfying the homoscedasticity assumption. While the normality of the residuals has improved, there are still some deviations from normality, particularly in the tails. This may not severely impact the model, but it is something to keep in mind when interpreting the results. The residuals are closer to normality than in the original model, which is a positive outcome.
+
+The low VIF values indicate that multicollinearity is not a concern in this model. The predictors are not excessively correlated with each other, so each contributes uniquely to explaining the variance in log(SalePrice). 
+
+Log-Transformation Results:
+
+The log transformation of `SalePrice` improved the linearity, homoscedasticity, and normality of the residuals, leading to a better-fitting and more reliable model. The model now satisfies the key assumptions required for multiple linear regression, making the inference drawn from this model more valid.
+
+Log Model Summary:
+
+  - Intercept: The intercept (5.797) represents the expected value of log(SalePrice) when all predictors are zero.
+  
+  - `LotArea`: The coefficient for `LotArea` (7.270e-06) is positive and significant, indicating that larger lot areas are associated with higher log(SalePrice). For every unit increase in `LotArea`, log(SalePrice) increases by approximately 7.270e-06.
+  
+  - `OverallQual`: The coefficient for `OverallQual` (1.992e-01) is also positive and highly significant. Higher overall quality significantly increases log(SalePrice).
+  
+  - `YearBuilt`: The coefficient for `YearBuilt` (2.504e-03) is positive and significant, suggesting that newer homes are associated with higher log(SalePrice).
+
+Log Model Fit:
+
+  - R-squared: The multiple R-squared value is 0.7213, meaning that approximately 72.13% of the variance in log(SalePrice) is explained by the model. This indicates a strong fit.
+  
+  - Adjusted R-squared: The adjusted R-squared is 0.7208, which accounts for the number of predictors in the model and also suggests a strong model fit.
+  
+  - Residual Standard Error: The residual standard error is 0.2111, indicating the average amount that the observed log(SalePrice) deviates from the fitted log(SalePrice).
+
+Conclusion:
+
+The predictors `LotArea`, `OverallQual`, and `YearBuilt` are all significant and have the expected effects on house prices, as measured by the log of `SalePrice`.
+
+### t-Test
+
+Assumptions:
+
+  - Independence: The samples should be independent.
+  - Normality: The distribution of differences in sample means should be approximately normal.
+  - Homogeneity of Variance: Variances in the two groups should be equal.
+
+Validation of Assumptions:
+
+```{r}
+# Create a new variable indicating whether a house was built before or after 2006
+train$YearGroup <- ifelse(train$YearBuilt >= 2006, "After 2006", "Before 2006")
+
+# Check for normality: Shapiro-Wilk test for both groups
+shapiro.test(train$SalePrice[train$YearGroup == "Before 2006"])
+shapiro.test(train$SalePrice[train$YearGroup == "After 2006"])
+
+# Check for homogeneity of variance: Levene's Test
+leveneTest(SalePrice ~ YearGroup, data = train)
+```
+Results of the Assumption Checks:
+
+  - Independence: This assumption is generally satisfied if the data points (houses) were randomly sampled and the groups are mutually exclusive (i.e., a house cannot belong to both "Before 2006" and "After 2006" groups). Independence is assumed to hold for this dataset.
+  
+  - Normality: Both p-values are significantly less than 0.05, indicating that the `SalePrice` distribution in both groups deviates significantly from normality. This violation of the normality assumption suggests that the results of the t-test may not be reliable. However, given the large sample sizes (N = 1458), the Central Limit Theorem suggests that the sampling distribution of the mean might still be approximately normal, making the t-test reasonably robust to this violation. If further precision is desired, a non-parametric alternative like the Mann-Whitney U test could be considered.
+  
+  - Homogeneity of Variance: The p-value is much less than 0.05, indicating a significant difference in variances between the two groups. This violation of the homogeneity of variance assumption suggests that the standard t-test may not be appropriate. Instead, Welch’s t-test, which does not assume equal variances, should be used. 
+
+Given the violations of the normality and homogeneity of variance assumptions, it is more appropriate to use Welch’s t-test, which is robust to differences in variances between the groups.
+
+Applying Welch's t-Test:
+
+```{r}
+# Perform Welch's t-test to compare mean SalePrice between houses built before and after 2006
+welch_t_test <- t.test(SalePrice ~ YearGroup, data = train, var.equal = FALSE)
+welch_t_test
+```
+Interpretation of Welch's t-Test Results:
+
+  - Test Statistics: The t-statistic of 13.014 is quite large, indicating a substantial difference between the means of the two groups (After 2006 and Before 2006). This suggests that the mean `SalePrice` for houses built after 2006 is significantly higher than for those built before 2006.
+  - Degrees of Freedom (df): Welch’s t-test uses a modified degrees of freedom calculation, which in this case is 179.36. This accounts for the unequal variances between the two groups.
+  - p-Value: The p-value is exceedingly small, well below the standard alpha level of 0.05. This indicates that the difference in means between the two groups is statistically significant. We reject the null hypothesis, concluding that there is a significant difference in `SalePrice` between houses built before and after 2006.
+  - Confidence Interval: The 95% confidence interval for the difference in means is between 84,656.03 and 114,917.65. This interval does not include zero, further confirming that the difference in means is significant. We can be 95% confident that the true difference in `SalePrice` between houses built after 2006 and those built before 2006 lies within this range.
+  - Sample Estimates: The average `SalePrice` for houses built after 2006 is approximately $269,909.20$, while the average for those built before 2006 is around $170,122.30$. This shows a substantial increase in the mean sale price for newer homes.
+
+Conclusion:
+
+The Welch’s t-test confirms that there is a statistically significant difference in the `SalePrice` between houses built before and after 2006. On average, houses built after 2006 sell for significantly higher prices than those built before 2006. This could reflect various factors, such as improvements in construction quality, modern design, or higher property values associated with newer homes. It might also indicate market trends where newer homes are in higher demand, driving up their prices.
+
+### Chi-Squared Test
+
+Assumptions:
+
+  - Independence: The observations in each group should be independent.
+  - Expected Frequency: The expected frequency count for each cell in the contingency table should be at least 5.
+
+Validation of Assumptions:
+
+```{r}
+# Create a contingency table for HouseStyle and Neighborhood
+contingency_table <- table(train$HouseStyle, train$Neighborhood)
+
+# Check expected frequencies
+chisq_test <- chisq.test(contingency_table)
+chisq_test$expected
+```
+Results of the Assumption Checks:
+
+This assumption is generally satisfied if the data points (house sales) are independent and there is no overlap between categories (e.g., each house has only one `HouseStyle` and belongs to one `Neighborhood`). Independence is assumed to hold for this dataset as there is no reason to believe that the data points are not independent. The warning indicates that some cells in the contingency table have expected frequencies below 5, which violates this assumption. Upon inspection of the expected frequencies in the contingency table, we can see that several cells have values less than 5. This violation suggests that the chi-squared approximation may be incorrect. Given that some expected frequencies are below 5, the chi-squared test may not be appropriate. To address this we can use Fisher's Exact Test. The test works well for smaller tables or when expected counts are too low, Fisher's Exact Test can be a more accurate alternative to the chi-squared test.
+
+Applying the Fisher's Exact Test:
+
+```{r}
+# Use Fisher's Exact Test with simulation
+fisher_test <- fisher.test(contingency_table, simulate.p.value = TRUE, B = 10000)
+fisher_test
+```
+Interpretation of Fisher's Exact Test:
+
+The p-value is extremely small, indicating a statistically significant association between `HouseStyle` and Neighborhood. The very low p-value suggests that there is a significant association between the `HouseStyle` of a house and the Neighborhood in which it is located. This means that the distribution of house styles is not independent of the neighborhood—certain styles are more likely to be found in specific neighborhoods. 
+
+Conclusion:
+
+This result could be valuable for those involved in urban planning, real estate development, or market analysis, as it highlights the strong link between housing styles and their geographic locations.
+
+# Results, Interpretations, Recommendations
+
+### Discussion of Results in Context.
+
+The regression analysis confirms that `OverallQual` (Overall Quality) and `LotArea` are significant predictors of `SalePrice`. The analysis shows that houses with higher overall quality and larger lot areas tend to have higher sale prices. The relationship between `YearBuilt` and `SalePrice` is positive, but less pronounced, suggesting that while newer houses tend to be more expensive, other factors like quality and lot size play a more significant role.
+
+### Interpretation of Conclusions
+
+Preliminary analysis suggests that factors like overall quality, lot area, and year built are significant predictors of house prices. There is also evidence of a significant relationship between house age and sale price. The results suggest that improving the overall quality of a house could lead to a higher sale price. Additionally, buyers looking for larger lots should be prepared to pay a premium. These findings align with general market expectations, where both the quality of construction and the size of the property significantly influence the market value.
+
+# Limitations, Generalizability, and Future Work
+
+### Caveats and Limitations
+
+The dataset is limited to Ames, Iowa, which may not generalize to other regions. Additionally, missing data in some variables, like Alley, may have introduced bias, especially if the missingness was not completely random. The exclusion of these variables was necessary but may have omitted potentially relevant factors.
+
+### Generalizability Issues
+
+Findings may not be applicable to urban areas with different housing market dynamics. For example, factors that drive housing prices in a small town like Ames might differ significantly from those in a large metropolitan area. Thus, caution should be taken when applying these results to other contexts.
+
+# End.
+
