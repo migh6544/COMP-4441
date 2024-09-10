@@ -1,0 +1,113 @@
+---
+title: "Chi Square Motivation, Polio"
+author: "Michael Ghattas"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(HistData)
+```
+
+## Test of Independence
+
+Apply the $\chi^2$ method to the polio data. One format in which chisq.test takes data is as a matrix. The default in this case is to do a test of independence of the rows and columns.
+
+*This is a $\chi^2$ test of the null hypothesis that contracting paralytic polio is independent of vaccination status in the Randomized Control experiment. Note that since the "Population" column includes paralytic polio cases and non-cases, the number of paralytic polio cases must be subracted from the full population in each group.*
+
+```{r}
+data("PolioTrials")
+dat<-PolioTrials
+m<-as.matrix(dat[1:2,3:4],nrow=2)
+m[,1]<-m[,1]-m[,2]
+chisq.test(m)
+chisq.test(m, correct=FALSE)
+dimnames(m)[[1]]<-c("treatment", "control")
+dimnames(m)[[2]]<-c("no polio","polio")
+m
+```
+*The very small p-values give us strong evidence against the null hypothesis.*
+
+*The matrix of expected values under the null hypothesis is available from the fitted model.*
+
+```{r}
+model.chisq<-chisq.test(m)
+model.chisq$expected
+```
+
+
+The method for the $\chi^{2}$ test of independence begins with the calculation of the values expected in each cell if the column proportions in each row are the same, and the row sums and column sums are preserved.
+
+*Compare this to the matrix of expected values from the fitted model.*
+
+```{r}
+p<-sum(m[,2])/sum(m)
+(P<-matrix(c(1-p,p),ncol=2))
+(T<-matrix(rowSums(m),nrow=2))
+(E<-T%*%P)
+
+# check
+rowSums(E)
+rowSums(m)
+colSums(E)
+colSums(m)
+```
+
+The test statistic is the sum of the values (Observed-Expected)^2/Expected in each cell. This may be adjusted for integer values by subtracting 1/2 from any cell with absolute value greater than 1/2 before squaring.
+
+*Note that these, respectively, equal the X-squared values from the uncorrected and the corrected tests above.*
+
+```{r}
+(chistat<-sum((m-E)^2/E))
+(chistat_adj<-sum((abs(m-E)-.5)^2/E))
+```
+
+The degrees of freedom for the $\chi^{2}$ is the number of cells that can be assigned freely while preserving the row and column sums. Here, df=1.
+
+*Visualize the $\chi^2$ curves for 1,5, and 10 degrees of freedom.$
+
+```{r}
+x=seq(0,20,by=.1)
+dat<-bind_rows(data.frame(x=x,y=dchisq(x,1),deg=1),
+               data.frame(x=x,y=dchisq(x,5),deg=5),
+               data.frame(x=x,y=dchisq(x,10),deg=10)
+              )
+
+ggplot(group_by(dat,deg),aes(x=x,y=y,color=factor(deg)))+geom_line()
+
+```
+
+A one-tailed test is typical: we're usually not concerned with an improbably good fit of observed to expected.
+
+```{r}
+pchisq(chistat,df=1,lower.tail=FALSE)
+chisq.test(m, correct=FALSE)
+pchisq(chistat_adj,df=1,lower.tail=FALSE)
+chisq.test(m)
+```
+
+# Practice
+
+*In the work below, you will conduct a $\chi^2$ test of the null hypothesis that contracting paralytic polio is independent of membership in the "Grade2NotInoculated" or "Controls" in the Observed Control experiment. First, please conduct the $\chi^2$ test using the "chisq.test" function on an appropriately constructed matrix. Please use the corrected test. Hint: the number of paralytic polio cases must be subracted from the full population. * 
+
+```{r}
+dat <- PolioTrials
+m <- as.matrix(dat[6:7, 3:4], nrow = 2)
+m[, 1] <- m[, 1] - m[, 2]
+dimnames(m)[[1]] <- c("control", "not.innoculated")
+dimnames(m)[[2]] <- c("no polio", "polio")
+(model.chisq <- chisq.test(m))
+```
+
+*Now please calculate the expected values under the null hypothesis in each portion of the contingency table using matrix algebra. Compare your results to the expected values from the fitted model.*
+
+```{r}
+p <- (sum(m[, 2]) / sum(m))
+P <- matrix(c(1 - p, p), ncol = 2)
+T <- matrix(rowSums(m), nrow = 2)
+(E <- T %*% P)
+model.chisq$expected
+```
+
+

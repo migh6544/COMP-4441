@@ -1,0 +1,121 @@
+---
+title: "dataframes"
+author: "Michael Ghattas"
+output:
+  pdf_document: default
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+# Part 1 Examples
+
+## Read in data
+
+General text files may be read in using *read.table* using appropriate arguments. CSV format, an "industry standard" typically uses *read.csv*
+
+```{r}
+dat<-read.csv("worms.csv")
+```
+
+## Inspecting the data
+
+You can view dataframes by double clicking in RStudio. There are some standard summary tools.
+
+```{r}
+dat
+dim(dat)
+names(dat)
+str(dat)
+summary(dat)
+head(dat)
+dat[2,4]
+```
+
+## Select columns
+
+Leaving the row index blank and providing column indices allows selection of a subset of the columns.
+
+```{r}
+dat[,3]
+dat$Vegetation
+dat[,2:4]
+```
+
+## Select rows
+
+Leaving the column index blank and providing a vector of indices or boolean values allows selection of a subset of the rows.
+
+```{r}
+dat[1:4,]
+damp<-dat[dat$Damp,]
+summary(damp)
+flat<-dat[dat$Slope<4.5,]
+summary(flat)
+```
+
+# Practice Problem for Part 1
+
+*Please supply code to create a new data frame "grass" the restricts "dat" to observations in which the "Vegetation" variable equals "Grassland". Output the values of the variable "Damp" for this data frame.*
+
+```{r}
+# Create the 'grass' data frame
+grass <- subset(dat, Vegetation == "Grassland")
+
+# Output the values of the 'Damp' variable for the 'grass' data frame
+damp_values <- grass$Damp
+
+# Display the 'grass' data frame and 'Damp' values
+grass
+damp_values
+```
+
+# Part 2 Example
+
+## Find Maximum Likelihood, binomial
+
+Maximize $p^{30}\left(1-p\right)^{20}$. The "optimize" function works for single variable functions.
+
+```{r}
+# function to calculate and return x^30*(1-x)^20, the function to be optimized.
+f<-function(x){
+  return (x^30*(1-x)^20)
+}
+(ml_ext<-optimize(f,c(0,1),maximum=TRUE)) # Look for the value that maximizes the function f 
+                                          # in the range [0,1], the range of valid probabilities.
+30/50 # theoretical value =30/(30+20)
+f(.6) # check
+```
+
+# Practice Problem for Part 2
+
+*Please revise the code above to calculate the value of $p$ that maximizes* $p^{15}\left(1-p\right)^{85}$. *Check the result by computing the relevant ratio. Calculate the maximum value of the function.*
+
+```{r}
+# Function to calculate and return p^15*(1-p)^85, the function to be optimized.
+f <- function(p) {
+  return (p^15 * (1-p)^85)
+}
+
+# Look for the value that maximizes the function f in the range [0,1].
+ml_ext <- optimize(f, c(0, 1), maximum = TRUE)
+
+# Theoretical value
+theoretical_value = (15 / (15 + 85))
+
+# Check the value at the theoretical maximum
+f_theoretical <- f(theoretical_value)
+
+# Calculate the maximum value of the function
+max_value <- ml_ext$objective
+
+# Output the results
+ml_ext
+theoretical_value
+f_theoretical
+max_value
+```

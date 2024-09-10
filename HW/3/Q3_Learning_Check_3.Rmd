@@ -1,0 +1,25 @@
+---
+title: "Q3 Learning Check 3"
+author: "Michael Ghattas & Faiza Ali"
+date: "7/3/2024"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Number of customers arriving at a bank in an hour
+customer_counts <- c(5, 9, 3)
+
+# Function to calculate the log likelihood for a given lambda
+likelihood <- function(lambda, data) {
+  prod(dpois(customer_counts, lambda))
+}
+# Applying optimize function for MLE
+optimize(likelihood, interval = c(3, 9), maximum = T)
+print(paste("Mean: ", mean(customer_counts)))
+```

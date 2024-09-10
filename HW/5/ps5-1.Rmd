@@ -1,0 +1,645 @@
+---
+title: "Problem Set 5"
+author: "Michael Ghattas"
+output:
+  pdf_document: default
+  urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+options(dplyr.summarise.inform = FALSE)
+
+```
+
+# Collaboration
+
+(1 point)
+
+Other students who I worked with on this assignment (if any) : None.
+
+# Introduction
+
+As an application of the some of the properties of expected values, problems 1-7 step through a proof that the expected value of the random variable that defines sample variance is the population variance, given that the population variance is defined.
+
+For each of Q1- Q7, let $X_1,X_2,...X_n$ be independent, identically distributed random variables with defined mean $\mu$ and variance $\sigma^2$.
+
+Question 8 gives examples of jointly distributed random variables that are independent and jointly distributed random variables that aren't independent.
+
+Question 9 gives an application of the mean and variance properties of independent random variables.
+
+This is a problem set intended to provide applications of material regarding jointly distributed random variables and expected values of functions of jointly distributed random variables. Questions on this material will be included on the midterm assessment.
+
+These questions were rendered in R markdown through RStudio (<https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf>, <http://rmarkdown.rstudio.com> ).
+
+# Question 1
+
+(5 points)
+
+Let $X_1,X_2,...X_n$ be independent, identically distributed random variables with mean $\mu$ and variance $\sigma^2$, and define the random variable $\bar X$ by $\bar X=\frac{1}{n}\sum_{i=1}^nX_i$. Prove the equality $$E\left[\sum_{i=1}^n\left(X_i-\bar X\right)^2\right]=E\left[\sum_{i=1}^nX_i^2\right]-2E\left[\sum_{i=1}^n\bar XX_i\right]+E\left[\sum_{i=1}^n\bar X^2\right]$$
+
+**Your answer here:**
+
+Let's start by expanding \((X_i - \bar{X})^2\):
+
+\[
+(X_i - \bar{X})^2 = X_i^2 - 2X_i \bar{X} + \bar{X}^2.
+\]
+
+Now, sum this expression over \(i\) from 1 to \(n\):
+
+\[
+\sum_{i=1}^n (X_i - \bar{X})^2 = \sum_{i=1}^n \left(X_i^2 - 2X_i \bar{X} + \bar{X}^2\right).
+\]
+
+This can be separated into three sums:
+
+\[
+\sum_{i=1}^n (X_i - \bar{X})^2 = \sum_{i=1}^n X_i^2 - 2\sum_{i=1}^n X_i \bar{X} + \sum_{i=1}^n \bar{X}^2.
+\]
+
+Taking the expectation of each term:
+
+\[
+E\left[\sum_{i=1}^n (X_i - \bar{X})^2\right] = E\left[\sum_{i=1}^n X_i^2\right] - 2E\left[\sum_{i=1}^n X_i \bar{X}\right] + E\left[\sum_{i=1}^n \bar{X}^2\right].
+\]
+
+Given that \(\bar{X}\) is a constant with respect to the summation over \(i\), we can factor it out:
+
+\[
+E\left[\sum_{i=1}^n X_i \bar{X}\right] = E\left[\bar{X} \sum_{i=1}^n X_i\right].
+\]
+
+Therefore, we have:
+
+\[
+E\left[\sum_{i=1}^n (X_i - \bar{X})^2\right] = E\left[\sum_{i=1}^n X_i^2\right] - 2E\left[\bar{X} \sum_{i=1}^n X_i\right] + E\left[\sum_{i=1}^n \bar{X}^2\right].
+\]
+
+Thus,
+
+\[
+E\left[\sum_{i=1}^n (X_i - \bar{X})^2\right] = E\left[\sum_{i=1}^n X_i^2\right] - 2E\left[\sum_{i=1}^n \bar{X} X_i\right] + E\left[\sum_{i=1}^n \bar{X}^2\right].
+\]
+
+
+# Question 2
+
+## Question 2.1
+
+(3 points)
+
+Let $X_1,X_2,...X_n$ be independent, identically distributed random variables with mean $\mu$ and variance $\sigma^2$. In terms of $\mu$ and $\sigma^2$, what is the value of $E[X_i^2]$? Please justify your answer mathematically.
+
+*Hint:* Note that $Var[X_i]=E[X_i^2]-E[X_i]^2$, while $Var[X_i]=\sigma^2$ and $E[X_i]=\mu$.
+
+**Your answer here:**
+To find $E[X_i^2]$ we use the formula for the variance:
+
+\[
+\text{Var}(X_i) = E[X_i^2] - (E[X_i])^2.
+\]
+
+Since we know that:
+
+\[
+\text{Var}(X_i) = \sigma^2 \quad \text{and} \quad E[X_i] = \mu.
+\]
+
+We substitute these into the variance formula to get:
+
+\[
+\sigma^2 = E[X_i^2] - \mu^2.
+\]
+
+We add $\mu^2$ to both sides:
+
+\[
+E[X_i^2] = \sigma^2 + \mu^2.
+\]
+
+
+## Question 2.2
+
+(3 points)
+
+Confirm numerically that your answer is correct for $X_i\sim gamma(shape=3,scale=2)$ which has mean equal to $6$ and variance equal to $12$.
+
+**Your code here:**
+
+```{r}
+# Set the parameters for the Gamma distribution
+shape <- 3
+scale <- 2
+
+# Calculate the theoretical mean and variance
+mu <- shape * scale
+sigma2 <- shape * scale^2
+
+# Calculate the theoretical E[X_i^2]
+theoretical_E_X2 <- sigma2 + mu^2
+
+# Simulate a large number of random variables from the Gamma distribution
+set.seed(123)  # for reproducibility
+n <- 1e6
+X <- rgamma(n, shape = shape, scale = scale)
+
+# Calculate the empirical second moment
+empirical_E_X2 <- mean(X^2)
+
+# Print the results
+cat("Theoretical E[X_i^2]:", theoretical_E_X2, "\n")
+cat("Empirical E[X_i^2]:", empirical_E_X2, "\n")
+```
+
+# Question 3
+
+(5 points)
+
+Assuming that $E[X_i^2]=\sigma^2+\mu^2$ for all $i$, what is $E\left[\sum_{i=1}^nX_i^2\right]$? Justify your answer mathematically.
+
+*Hint:* Recall that $E\left[\sum_{i=1}^nY_i\right]=\sum_{i=1}^nE[Y_i]$ for any random variables $Y_i,Y_2...Y_n$ with defined means.
+
+**Your answer here:**
+We can use the linearity of expectation i.e. the expectation of their sum is the sum of their expectations:
+
+\[
+E\left[\sum_{i=1}^n Y_i\right] = \sum_{i=1}^n E[Y_i].
+\]
+
+In this case, let $Y_i = X_i^2$. Therefore:
+
+\[
+E\left[\sum_{i=1}^n X_i^2\right] = \sum_{i=1}^n E[X_i^2].
+\]
+
+Since $E[X_i^2] = \sigma^2 + \mu^2$ for all $i$, we can substitute this into the sum:
+
+\[
+E\left[\sum_{i=1}^n X_i^2\right] = \sum_{i=1}^n (\sigma^2 + \mu^2).
+\]
+
+This simplifies to:
+
+\[
+E\left[\sum_{i=1}^n X_i^2\right] = n(\sigma^2 + \mu^2).
+\]
+
+Thus, the value of $E\left[\sum_{i=1}^n X_i^2\right]$ is $n(\sigma^2 + \mu^2)$.
+
+
+# Question 4
+
+(5 points)
+
+Define the random variable $\bar X$ by $\bar X=\frac{1}{n}\sum_{i=1}^nX_i$. What is the value of $E\left[\sum_{i=1}^n\bar X^2\right]$? Justify your answer mathematically.
+
+*Hint:* Recall that the mean of $\bar X$ equals $\mu$ and the variance equals $\frac{\sigma^2}{n}$. The fact that $E\left[\sum_{i=1}^nY_i\right]=\sum_{i=1}^nE[Y_i]$ mentioned above may also be useful. Further, $\bar X$ is constant with respect to the index $i$ in the sum.
+
+**Your answer here:**
+First, recall that $\bar{X}$ is constant with respect to the index $i$ in the sum. Thus, $\bar{X}$ can be factored out of the summation:
+
+\[
+\sum_{i=1}^n \bar{X}^2 = n \bar{X}^2.
+\]
+
+Next, we need to find $E[n \bar{X}^2]$:
+
+\[
+E\left[\sum_{i=1}^n \bar{X}^2\right] = E[n \bar{X}^2] = n E[\bar{X}^2].
+\]
+
+Now, we need to find $E[\bar{X}^2]$. We can use the fact that $E[\bar{X}^2]$ can be expressed in terms of the variance and the square of the mean:
+
+\[
+E[\bar{X}^2] = \text{Var}(\bar{X}) + (E[\bar{X}])^2.
+\]
+
+Substitute values into the equation:
+
+\[
+E[\bar{X}^2] = \frac{\sigma^2}{n} + \mu^2.
+\]
+
+Therefore, the expected value of $n \bar{X}^2$ is:
+
+\[
+E[n \bar{X}^2] = n \left(\frac{\sigma^2}{n} + \mu^2\right).
+\]
+
+Simplify this expression:
+
+\[
+E[n \bar{X}^2] = n \cdot \frac{\sigma^2}{n} + n \cdot \mu^2 = \sigma^2 + n \mu^2.
+\]
+
+Thus,
+
+\[
+E\left[\sum_{i=1}^n \bar{X}^2\right] = \sigma^2 + n \mu^2.
+\]
+
+
+# Question 5
+
+(5 points)
+
+Why are the following expressions equivalent? Justify your answer.$$E\left[\sum_{i=1}^n\bar XX_i\right]=E\left[\bar X\sum_{i=1}^nX_i\right]=E\left[n\bar X^2\right]$$
+
+**Your answer here:**
+Recall that $\bar{X} = \frac{1}{n} \sum_{i=1}^n X_i$. We start by looking at the expression $E\left[\sum_{i=1}^n \bar{X} X_i\right]$. Since $\bar{X}$ is the same for each term in the sum, it can be factored out of the summation:
+
+\[
+\sum_{i=1}^n \bar{X} X_i = \bar{X} \sum_{i=1}^n X_i.
+\]
+
+Thus:
+
+\[
+E\left[\sum_{i=1}^n \bar{X} X_i\right] = E\left[\bar{X} \sum_{i=1}^n X_i\right].
+\]
+
+Next, consider the expression $\bar{X} \sum_{i=1}^n X_i$. We substitute $\bar{X} = \frac{1}{n} \sum_{i=1}^n X_i$ into the expression:
+
+\[
+\bar{X} \sum_{i=1}^n X_i = \left(\frac{1}{n} \sum_{i=1}^n X_i\right) \sum_{i=1}^n X_i.
+\]
+
+This simplifies to:
+
+\[
+\left(\frac{1}{n} \sum_{i=1}^n X_i\right) \sum_{i=1}^n X_i = \frac{1}{n} \left(\sum_{i=1}^n X_i\right) \left(\sum_{j=1}^n X_j\right).
+\]
+
+We can rewrite this as:
+
+\[
+\frac{1}{n} \sum_{i=1}^n \sum_{j=1}^n X_i X_j.
+\]
+
+Since $\bar{X} = \frac{1}{n} \sum_{i=1}^n X_i$, squaring $\bar{X}$ gives:
+
+\[
+\bar{X}^2 = \left(\frac{1}{n} \sum_{i=1}^n X_i\right)^2 = \frac{1}{n^2} \left(\sum_{i=1}^n X_i\right)^2.
+\]
+
+Multiplying both sides by $n$:
+
+\[
+n \bar{X}^2 = n \cdot \frac{1}{n^2} \left(\sum_{i=1}^n X_i\right)^2 = \frac{1}{n} \left(\sum_{i=1}^n X_i\right)^2.
+\]
+
+This is equivalent to:
+
+\[
+\frac{1}{n} \left(\sum_{i=1}^n X_i\right)^2 = \frac{1}{n} \sum_{i=1}^n \sum_{j=1}^n X_i X_j.
+\]
+
+Taking the expectation of both sides:
+
+\[
+E\left[\bar{X} \sum_{i=1}^n X_i\right] = E\left[n \bar{X}^2\right].
+\]
+
+Thus,
+
+\[
+E\left[\sum_{i=1}^n \bar{X} X_i\right] = E\left[\bar{X} \sum_{i=1}^n X_i\right] = E\left[n \bar{X}^2\right].
+\]
+
+
+# Question 6
+
+(5 points)
+
+Assume that: \begin{align}
+E\left[\sum_{i=1}^nX_i^2\right]&=n\left(\sigma^2+\mu^2\right) \\
+E\left[\sum_{i=1}^n\bar X^2\right]&=n\left(\frac{\sigma^2}{n}+\mu^2\right) \\
+E\left[\sum_{i=1}^n\bar XX_i\right]&=E\left[n\bar X^2\right]=n\left(\frac{\sigma^2}{n}+\mu^2\right)
+\end{align}
+
+Given (1), (2), and (3), please simplify the following expression. Be sure to show your work:$$E\left[\sum_{i=1}^nX_i^2\right]-2E\left[\sum_{i=1}^n\bar XX_i\right]+E\left[\sum_{i=1}^n\bar X^2\right]$$
+
+**Your answer here:**
+We can substitute into the equation:
+
+\[
+E\left[\sum_{i=1}^n X_i^2\right] - 2E\left[\sum_{i=1}^n \bar{X} X_i\right] + E\left[\sum_{i=1}^n \bar{X}^2\right]
+\]
+
+\[
+n\left(\sigma^2 + \mu^2\right) - 2 \cdot n\left(\frac{\sigma^2}{n} + \mu^2\right) + n\left(\frac{\sigma^2}{n} + \mu^2\right).
+\]
+
+Then, simplify each term separately:
+
+1. \(E\left[\sum_{i=1}^n X_i^2\right] = n(\sigma^2 + \mu^2)\),
+2. \(2E\left[\sum_{i=1}^n \bar{X} X_i\right] = 2 \cdot n\left(\frac{\sigma^2}{n} + \mu^2\right) = 2(\sigma^2 + n \mu^2)\),
+3. \(E\left[\sum_{i=1}^n \bar{X}^2\right] = n\left(\frac{\sigma^2}{n} + \mu^2\right) = \sigma^2 + n \mu^2\).
+
+Now we substitute back into the expression, combine terms, and simplify:
+
+\[
+n(\sigma^2 + \mu^2) - 2(\sigma^2 + \mu^2) + (\sigma^2 + \mu^2).
+\]
+
+\[
+n(\sigma^2 + \mu^2) - 2(\sigma^2 + \mu^2) + (\sigma^2 + \mu^2).
+\]
+
+\[
+(n - 2 + 1)(\sigma^2 + \mu^2).
+\]
+
+\[
+(n - 1)(\sigma^2 + \mu^2).
+\]
+
+Therefore,
+
+\[
+E\left[\sum_{i=1}^n X_i^2\right] - 2E\left[\sum_{i=1}^n \bar{X} X_i\right] + E\left[\sum_{i=1}^n \bar{X}^2\right] = (n - 1)(\sigma^2 + \mu^2).
+\]
+
+
+# Question 7
+
+(5 points)
+
+Given a series of random variables \$X_1,X_2,...,X_n\$ with $$E\left[\sum_{i=1}^nX_i^2\right]-2E\left[\sum_{i=1}^n\bar XX_i\right]+E\left[\sum_{i=1}^n\bar X^2\right]=(n-1)\sigma^2$$ What is the value of $E\left[\frac{1}{n-1}\sum_{i=1}^n\left(X_i-\bar X\right)^2\right]$?
+
+**Your answer here:**
+Recall:
+\[
+\sum_{i=1}^n \left(X_i - \bar{X}\right)^2 = \sum_{i=1}^n X_i^2 - 2 \sum_{i=1}^n \bar{X} X_i + \sum_{i=1}^n \bar{X}^2.
+\]
+
+Taking the expectation on both sides:
+\[
+E\left[\sum_{i=1}^n \left(X_i - \bar{X}\right)^2\right] = E\left[\sum_{i=1}^n X_i^2\right] - 2E\left[\sum_{i=1}^n \bar{X} X_i\right] + E\left[\sum_{i=1}^n \bar{X}^2\right].
+\]
+
+We are given that this is equal to $(n-1)\sigma^2$:
+\[
+E\left[\sum_{i=1}^n \left(X_i - \bar{X}\right)^2\right] = (n-1)\sigma^2.
+\]
+
+Divide both sides of the equation by $(n-1)$:
+\[
+E\left[\frac{1}{n-1} \sum_{i=1}^n \left(X_i - \bar{X}\right)^2\right] = \frac{1}{n-1} \cdot (n-1)\sigma^2 = \sigma^2.
+\]
+
+Therefore,
+\[
+E\left[\frac{1}{n-1} \sum_{i=1}^n \left(X_i - \bar{X}\right)^2\right] = \sigma^2.
+\]
+
+
+# Question 8
+
+## Question 8.1
+
+(3 points)
+
+Consider the probability space defined by $(S,M,P)$ where $S=\{a,b,c,d,e,f\}$, the set of events $M$ is the power set of $S$, and $P$ is defined by the density $f(s)=\frac{1}{6}$ for all $s\in S$. Let $X$ be the random variable on this probability space defined by $X(a)=X(b)=X(c)=1$ and $X(d)=X(e)=X(f)=0$. Define $Y$ by $Y(a)=Y(d)=2$, $Y(b)=Y(c)=Y(e)=Y(f)=3$. Are these random variables independent? Justify your answer mathematically.
+
+**Your answer here:**
+To determine whether the random variables $X$ and $Y$ are independent, we need to check whether the joint probability distribution $P(X = x, Y = y)$ is equal to the product of the marginal probabilities $P(X = x)$ and $P(Y = y)$ for all possible values of $x$ and $y$. First, we calculate the marginal probabilities for $X$ and $Y$.
+
+### Marginal Probability of $X$
+
+- $P(X=1)$: $X$ takes the value 1 for events $\{a, b, c\}$.
+\[
+P(X=1) = P(\{a\}) + P(\{b\}) + P(\{c\}) = \frac{1}{6} + \frac{1}{6} + \frac{1}{6} = \frac{3}{6} = \frac{1}{2}.
+\]
+
+- $P(X=0)$: $X$ takes the value 0 for events $\{d, e, f\}$.
+\[
+P(X=0) = P(\{d\}) + P(\{e\}) + P(\{f\}) = \frac{1}{6} + \frac{1}{6} + \frac{1}{6} = \frac{3}{6} = \frac{1}{2}.
+\]
+
+### Marginal Probability of $Y$
+
+- $P(Y=2)$: $Y$ takes the value 2 for events $\{a, d\}$.
+\[
+P(Y=2) = P(\{a\}) + P(\{d\}) = \frac{1}{6} + \frac{1}{6} = \frac{2}{6} = \frac{1}{3}.
+\]
+
+- $P(Y=3)$: $Y$ takes the value 3 for events $\{b, c, e, f\}$.
+\[
+P(Y=3) = P(\{b\}) + P(\{c\}) + P(\{e\}) + P(\{f\}) = \frac{1}{6} + \frac{1}{6} + \frac{1}{6} + \frac{1}{6} = \frac{4}{6} = \frac{2}{3}.
+\]
+
+### Joint Probability Distribution $P(X=x, Y=y)$
+
+Now we calculate the joint probabilities for the pairs $(X=x, Y=y)$:
+
+- $P(X=1, Y=2)$: This happens for event $\{a\}$.
+\[
+P(X=1, Y=2) = P(\{a\}) = \frac{1}{6}.
+\]
+
+- $P(X=1, Y=3)$: This happens for events $\{b, c\}$.
+\[
+P(X=1, Y=3) = P(\{b\}) + P(\{c\}) = \frac{1}{6} + \frac{1}{6} = \frac{2}{6} = \frac{1}{3}.
+\]
+
+- $P(X=0, Y=2)$: This happens for event $\{d\}$.
+\[
+P(X=0, Y=2) = P(\{d\}) = \frac{1}{6}.
+\]
+
+- $P(X=0, Y=3)$: This happens for events $\{e, f\}$.
+\[
+P(X=0, Y=3) = P(\{e\}) + P(\{f\}) = \frac{1}{6} + \frac{1}{6} = \frac{2}{6} = \frac{1}{3}.
+\]
+
+### Check Independence
+
+To check independence, we need to verify if $P(X=x, Y=y) = P(X=x) \cdot P(Y=y)$ for all possible values of $x$ and $y$.
+
+- For $x=1, y=2$:
+\[
+P(X=1, Y=2) = \frac{1}{6}, \quad P(X=1) \cdot P(Y=2) = \frac{1}{2} \cdot \frac{1}{3} = \frac{1}{6}.
+\]
+
+- For $x=1, y=3$:
+\[
+P(X=1, Y=3) = \frac{1}{3}, \quad P(X=1) \cdot P(Y=3) = \frac{1}{2} \cdot \frac{2}{3} = \frac{1}{3}.
+\]
+
+- For $x=0, y=2$:
+\[
+P(X=0, Y=2) = \frac{1}{6}, \quad P(X=0) \cdot P(Y=2) = \frac{1}{2} \cdot \frac{1}{3} = \frac{1}{6}.
+\]
+
+- For $x=0, y=3$:
+\[
+P(X=0, Y=3) = \frac{1}{3}, \quad P(X=0) \cdot P(Y=3) = \frac{1}{2} \cdot \frac{2}{3} = \frac{1}{3}.
+\]
+
+Since $P(X=x, Y=y) = P(X=x) \cdot P(Y=y)$ for all combinations of $x$ and $y$, the random variables $X$ and $Y$ are independent.
+
+
+## Question 8.2
+
+(3 points)
+
+Consider the probability space defined by $(S,M,P)$ where $S=\{a,b,c,d,e,f\}$, the set of events $M$ is the power set of $S$, and $P$ is defined by the density $f(s)=\frac{1}{6}$ for all $s\in S$. Let $X$ be the random variable on this probability space defined by $X(a)=X(d)=X(e)=1$ and $X(b)=X(c)=X(f)=0$. Define $Y$ by $Y(a)=Y(d)=2$, $Y(b)=Y(c)=Y(e)=Y(f)=3$. Are these random variables independent? Justify your answer mathematically.
+
+**Your answer here:**
+To determine whether the random variables $X$ and $Y$ are independent, we need to verify whether the joint probability distribution $P(X = x, Y = y)$ equals the product of the marginal probabilities $P(X = x)$ and $P(Y = y)$ for all possible values of $x$ and $y$. First, let's calculate the marginal probabilities for $X$ and $Y$.
+
+### Marginal Probability of $X$
+
+- $P(X=1)$: $X$ takes the value 1 for events $\{a, d, e\}$.
+\[
+P(X=1) = P(\{a\}) + P(\{d\}) + P(\{e\}) = \frac{1}{6} + \frac{1}{6} + \frac{1}{6} = \frac{3}{6} = \frac{1}{2}.
+\]
+
+- $P(X=0)$: $X$ takes the value 0 for events $\{b, c, f\}$.
+\[
+P(X=0) = P(\{b\}) + P(\{c\}) + P(\{f\}) = \frac{1}{6} + \frac{1}{6} + \frac{1}{6} = \frac{3}{6} = \frac{1}{2}.
+\]
+
+### Marginal Probability of $Y$
+
+- $P(Y=2)$: $Y$ takes the value 2 for events $\{a, d\}$.
+\[
+P(Y=2) = P(\{a\}) + P(\{d\}) = \frac{1}{6} + \frac{1}{6} = \frac{2}{6} = \frac{1}{3}.
+\]
+
+- $P(Y=3)$: $Y$ takes the value 3 for events $\{b, c, e, f\}$.
+\[
+P(Y=3) = P(\{b\}) + P(\{c\}) + P(\{e\}) + P(\{f\}) = \frac{1}{6} + \frac{1}{6} + \frac{1}{6} + \frac{1}{6} = \frac{4}{6} = \frac{2}{3}.
+\]
+
+### Joint Probability Distribution $P(X=x, Y=y)$
+
+Now we calculate the joint probabilities for the pairs $(X=x, Y=y)$:
+
+- $P(X=1, Y=2)$: This happens for events $\{a, d\}$.
+\[
+P(X=1, Y=2) = P(\{a\}) + P(\{d\}) = \frac{1}{6} + \frac{1}{6} = \frac{2}{6} = \frac{1}{3}.
+\]
+
+- $P(X=1, Y=3)$: This happens for event $\{e\}$.
+\[
+P(X=1, Y=3) = P(\{e\}) = \frac{1}{6}.
+\]
+
+- $P(X=0, Y=2)$: This does not occur since there are no events where $X=0$ and $Y=2$.
+\[
+P(X=0, Y=2) = 0.
+\]
+
+- $P(X=0, Y=3)$: This happens for events $\{b, c, f\}$.
+\[
+P(X=0, Y=3) = P(\{b\}) + P(\{c\}) + P(\{f\}) = \frac{1}{6} + \frac{1}{6} + \frac{1}{6} = \frac{3}{6} = \frac{1}{2}.
+\]
+
+### Check Independence
+
+To check independence, we need to verify if $P(X=x, Y=y) = P(X=x) \cdot P(Y=y)$ for all possible values of $x$ and $y$.
+
+- For $x=1, y=2$:
+\[
+P(X=1, Y=2) = \frac{1}{3}, \quad P(X=1) \cdot P(Y=2) = \frac{1}{2} \cdot \frac{1}{3} = \frac{1}{6}.
+\]
+
+- For $x=1, y=3$:
+\[
+P(X=1, Y=3) = \frac{1}{6}, \quad P(X=1) \cdot P(Y=3) = \frac{1}{2} \cdot \frac{2}{3} = \frac{1}{3}.
+\]
+
+- For $x=0, y=2$:
+\[
+P(X=0, Y=2) = 0, \quad P(X=0) \cdot P(Y=2) = \frac{1}{2} \cdot \frac{1}{3} = \frac{1}{6}.
+\]
+
+- For $x=0, y=3$:
+\[
+P(X=0, Y=3) = \frac{1}{2}, \quad P(X=0) \cdot P(Y=3) = \frac{1}{2} \cdot \frac{2}{3} = \frac{1}{3}.
+\]
+
+Since the joint probabilities do not equal the product of the marginal probabilities in all cases, $X$ and $Y$ are not independent.
+
+
+# Context for Question 9
+
+Suppose an experiment is performed to estimate the value of a physical constant, and that, subsequently, another experiment is performed to estimate the same value. The expected value of both experiments is the true, unknown value of the physical constant. Suppose the variance of the outcome of each experiment can be calculated from physical properties and known characteristics of the measurement technique. The two outcomes can be combined to yield a more precise estimate.
+
+This was the situation in 2021 regarding the value of the magnetic moment of muons. Combined experimental results gave strong evidence the previously accepted, theoretically derived value of the magnetic moment of the muon was incorrect.
+
+The first result from the Muon g-2 experiment at Fermilab confirms the result from the experiment performed at Brookhaven National Lab two decades ago. Together, the two results show strong evidence that muons diverge from the Standard Model prediction.
+
+[[**This link**]{.underline}](https://news.fnal.gov/2021/04/first-results-from-fermilabs-muon-g-2-experiment-strengthen-evidence-of-new-physics/) provides a graph showing both labs' results as well as theoretical values. The graph is the second image in the article. Please review the graph.
+
+The same source provides numerical values for the accepted theoretical values and average of the new experimental results.
+
+-   For the theoretical anomalous magnetic moment: 0.00116591810
+
+-   For the theoretical uncertainty: 43
+
+-   For the new experimental world-average anomalous magnetic moment: 0.00116592061
+
+-   For the and the uncertainty: 41
+
+The source states:
+
+"The combined results from Fermilab and Brookhaven show a difference with theory at a significance of 4.1 sigma" [[**This link**]{.underline}](https://news.fnal.gov/2020/06/physicists-publish-worldwide-consensus-of-muon-magnetic-moment-calculation/) gives the Brookhaven details, with uncertainty in parentheses. "The most precise experimental result available so far is ... 116 592 089(63) x 10-11"
+
+[[**This link**]{.underline}](https://cerncourier.com/a/fermilab-strengthens-muon-g-2-anomaly/) provides the Fermilab value, with uncertainty in parentheses."Fermilab...muon’s anomalous magnetic moment 116 592 040(54)×10-11"
+
+Generally, meta-analyses can give rise to the question of how best to combine multiple independent estimates of the same value. The problem below investigates an approach suited to the muon situation.
+
+## Question 9
+
+(7 points)
+
+Let $X$ and $Y$ be independent random variables with the same unknown mean $\mu$ and known variances $\sigma^2_X$ and $\sigma^2_Y$. Consider $a\in [0,1]$. Let $W$ be the random variable $aX+(1-a)Y$. Note that the mean of $W$ equals $\mu$ while the variance equals $a^2\sigma^2_X+(1-a)^2\sigma^2_Y$. What value of $a$ minimizes the variance of $W$? Justify your answer mathematically.
+
+**Your answer here:**
+To find the value of $a$ that minimizes the variance of the random variable $W = aX + (1-a)Y$, where $X$ and $Y$ are independent random variables with the same unknown mean $\mu$ and known variances $\sigma^2_X$ and $\sigma^2_Y$, we need to find the value of $a$ that minimizes the expression $a^2 \sigma^2_X + (1-a)^2 \sigma^2_Y$. To do this, take the derivative of $\text{Var}(W)$ with respect to $a$ and set it to zero:
+ \[
+ \frac{d}{da} \left(a^2 \sigma^2_X + (1-a)^2 \sigma^2_Y\right) = 0
+ \]
+
+Compute the derivative:
+ \[
+ \frac{d}{da} \left(a^2 \sigma^2_X + (1-a)^2 \sigma^2_Y\right) = 2a \sigma^2_X - 2(1-a) \sigma^2_Y
+ \]
+
+ Set the derivative equal to zero:
+ \[
+ 2a \sigma^2_X - 2(1-a) \sigma^2_Y = 0
+ \]
+
+Solve for $a$:
+ Simplify the equation:
+ \[
+ 2a \sigma^2_X = 2\sigma^2_Y - 2a\sigma^2_Y
+ \]
+
+ \[
+ a\sigma^2_X + a\sigma^2_Y = \sigma^2_Y
+ \]
+
+ \[
+ a(\sigma^2_X + \sigma^2_Y) = \sigma^2_Y
+ \]
+
+ \[
+ a = \frac{\sigma^2_Y}{\sigma^2_X + \sigma^2_Y}
+ \]
+
+Therefore, the value of $a$ that minimizes the variance of $W = aX + (1-a)Y$ is:
+
+\[
+a = \frac{\sigma^2_Y}{\sigma^2_X + \sigma^2_Y}.
+\]
+
+
+
+# End.

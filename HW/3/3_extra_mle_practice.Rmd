@@ -1,0 +1,160 @@
+---
+title: "Extra Maximum Likelihood Estimate Practice"
+author: "Michael Ghattas"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+# Introduction
+
+These are additional, optional practice problems to supplement that material covered in Week 3 and Problem Set 3 on Maximum Likelihood Estimation (MLE). These are intended to help you get extra practice with these concepts and prepare for the midterm exam. 
+
+These practice problems are also an opportunity to improve your score for Problem Set 3 which originally covered MLE. I will add these on as bonus points to improve your Problem Set 3 grade. If you would like to submit these practice questions for a grade, they are due at the same time as Problem Set 5. 
+
+
+
+# Problem 1 (4 points)
+
+Suppose we have data points $x_1,x_2,...,x_n$ where each $x_i$ is an i.i.d. random variable generated from a distribution with the following pdf:
+$$f(x|\theta)(1+\theta)x^\theta, \text{  for } x\in[0,1]$$
+and $f(x|\theta)=0$ for $x \notin [0,1]$. Using maximum likelihood estimate, estimate the parameter $\theta$ from the data.
+
+
+**Answer**
+
+To find the maximum likelihood estimate (MLE) for \(\theta\), we first write the likelihood function \(L(\theta)\) based on the given data points:
+
+\[
+L(\theta) = \prod_{i=1}^n f(x_i|\theta) = \prod_{i=1}^n (1+\theta)x_i^\theta
+\]
+
+Next, we take the natural logarithm of the likelihood function to obtain the log-likelihood function \(\ell(\theta)\):
+
+\[
+\ell(\theta) = \log L(\theta) = \log \left( \prod_{i=1}^n (1+\theta)x_i^\theta \right)
+\]
+
+\[
+\ell(\theta) = \sum_{i=1}^n \log \left( (1+\theta)x_i^\theta \right)
+\]
+
+\[
+\ell(\theta) = \sum_{i=1}^n \left( \log (1+\theta) + \log x_i^\theta \right)
+\]
+
+\[
+\ell(\theta) = \sum_{i=1}^n \left( \log (1+\theta) + \theta \log x_i \right)
+\]
+
+\[
+\ell(\theta) = n \log (1+\theta) + \theta \sum_{i=1}^n \log x_i
+\]
+
+To find the MLE, we take the derivative of \(\ell(\theta)\) with respect to \(\theta\) and set it to zero:
+
+\[
+\frac{d\ell(\theta)}{d\theta} = \frac{d}{d\theta} \left( n \log (1+\theta) + \theta \sum_{i=1}^n \log x_i \right)
+\]
+
+\[
+\frac{d\ell(\theta)}{d\theta} = \frac{n}{1+\theta} + \sum_{i=1}^n \log x_i
+\]
+
+Setting the derivative to zero:
+
+\[
+\frac{n}{1+\theta} + \sum_{i=1}^n \log x_i = 0
+\]
+
+\[
+\frac{n}{1+\theta} = -\sum_{i=1}^n \log x_i
+\]
+
+\[
+1 + \theta = -\frac{n}{\sum_{i=1}^n \log x_i}
+\]
+
+\[
+\theta = -1 - \frac{n}{\sum_{i=1}^n \log x_i}
+\]
+
+Therefore, the maximum likelihood estimate for \(\theta\) is:
+
+\[
+\hat{\theta} = -1 - \frac{n}{\sum_{i=1}^n \log x_i}
+\]
+
+
+
+# Problem 2 (4 points)
+
+Suppose we have data points $x_1,x_2,...,x_n$ where each $x_i$ is an i.i.d. random variable drawn from a Poisson distribution with rate parameter $\lambda$. Find the maximum likelihood estimate for $\lambda$. 
+
+
+**Answer**
+
+Given data points \(x_1, x_2, \ldots, x_n\) where each \(x_i\) is an i.i.d. random variable drawn from a Poisson distribution with rate parameter \(\lambda\).
+The probability mass function of a Poisson distribution is given by:
+
+\[
+P(X = x | \lambda) = \frac{\lambda^x e^{-\lambda}}{x!}
+\]
+
+To find the MLE for \(\lambda\), we write the likelihood function \(L(\lambda)\):
+
+\[
+L(\lambda) = \prod_{i=1}^n \frac{\lambda^{x_i} e^{-\lambda}}{x_i!}
+\]
+
+Taking the natural logarithm of the likelihood function, we obtain the log-likelihood function \(\ell(\lambda)\):
+
+\[
+\ell(\lambda) = \log L(\lambda) = \log \left( \prod_{i=1}^n \frac{\lambda^{x_i} e^{-\lambda}}{x_i!} \right)
+\]
+
+\[
+\ell(\lambda) = \sum_{i=1}^n \log \left( \frac{\lambda^{x_i} e^{-\lambda}}{x_i!} \right)
+\]
+
+\[
+\ell(\lambda) = \sum_{i=1}^n \left( x_i \log \lambda - \lambda - \log x_i! \right)
+\]
+
+\[
+\ell(\lambda) = \left( \sum_{i=1}^n x_i \right) \log \lambda - n\lambda - \sum_{i=1}^n \log x_i!
+\]
+
+To find the MLE, we take the derivative of \(\ell(\lambda)\) with respect to \(\lambda\) and set it to zero:
+
+\[
+\frac{d\ell(\lambda)}{d\lambda} = \frac{d}{d\lambda} \left( \left( \sum_{i=1}^n x_i \right) \log \lambda - n\lambda \right)
+\]
+
+\[
+\frac{d\ell(\lambda)}{d\lambda} = \frac{\sum_{i=1}^n x_i}{\lambda} - n
+\]
+
+Setting the derivative to zero:
+
+\[
+\frac{\sum_{i=1}^n x_i}{\lambda} - n = 0
+\]
+
+\[
+\frac{\sum_{i=1}^n x_i}{\lambda} = n
+\]
+
+\[
+\lambda = \frac{\sum_{i=1}^n x_i}{n}
+\]
+
+Therefore, the maximum likelihood estimate for \(\lambda\) is:
+
+\[
+\hat{\lambda} = \frac{1}{n} \sum_{i=1}^n x_i
+\]
+
+
+
+# End.

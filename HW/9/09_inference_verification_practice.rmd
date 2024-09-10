@@ -1,0 +1,179 @@
+---
+title: "Inference Verification"
+author: "Michael Ghattas"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(HistData)
+```
+
+# Inference Formulas
+
+One purpose of the following code is to connect the inference formulas from the theory of linear regression to the output of the model-fitting code. A second purpose is to provide visualizations for some of the values in the inference formulas.
+
+## Data and Model
+
+Remain with the model of Wealth as a linear function of Commerce in central France around 1830.
+
+```{r}
+data("Guerry")
+dat<-Guerry
+
+dat.c<-filter(dat,Region=="C")
+m.c.w<-lm(Wealth~Commerce,data=dat.c)
+summary(m.c.w)
+
+```
+
+
+## Some model sums of squares
+
+```{r}
+# SSY
+(SSY<-sum((dat.c$Wealth-mean(dat.c$Wealth))^2))
+
+# SSE
+(SSE<-sum((dat.c$Wealth-m.c.w$fitted)^2))
+
+# SSR
+(SSR<-sum((m.c.w$fitted-mean(dat.c$Wealth))^2))
+
+SSY
+SSE+SSR
+```
+
+$R^2=\left(SSY-SSE\right)/SSY=SSR/SSY$, the percent of the variation in the response variable accounted for by the fitted values. Recall that $R^2$ equals the square of the correlation of the response variable and the explanatory variable.
+
+# Practice 1
+
+*In the code block below, please compute $R^2=SSR/SSY$. Also, please compute the square of the correlation of "dat.c$Wealth" and "dat.c$Commerce". Confirm that both results equal the value of $R^2$ given in the summary of the model "(m.c.w)".*
+
+```{r}
+(SSR/SSY)
+
+cor(dat.c$Wealth,dat.c$Commerce)
+cor(dat.c$Wealth,dat.c$Commerce)^2
+
+summary(m.c.w)$r.squared
+```
+
+## p-value of regression
+
+*The p-value of the regression can be calculated from the statistic $\frac{\frac{SSY-SSE}{\left(n-1\right)-\left(n-2\right)}}{\frac{SSE}{n-2}}$. Under the null hypothesis that $m=0$, this has an F-distribution with numerator degrees of freedom equal to $\left(n-1\right)-\left(n-2\right)=1$ and denominator degrees of freedom equal to $n-2$.*
+
+```{r}
+n<-nrow(dat.c)
+(s2<-SSE/(n-2))
+(f.stat<-SSR/s2)
+(pf(f.stat,1,n-2,lower.tail=FALSE))
+(pf((SSY-SSE)/((n-1)-(n-2))/(SSE/(n-2)),1,n-2,lower.tail=FALSE ))
+
+summary(m.c.w)
+```
+
+
+## Standard error of slope
+
+# Practice 2
+
+*Compute the standard error of the slope. Confirm the p-value for the slope. Recall that $s^2\frac{1}{\sum_{i=1}^n\left(X_i-\bar{X}\right)^2}$ is a formula for the standard error of the slope. This is equivalent to $s^2\frac{1}{\sum_{i=1}^nX_i^2-n\bar{X}^2}$. The value $s^2$ is stored in the variable "s2" above. Confirm that the standard error computed this way equals the standard error from the summary of "m.c.w".*
+
+```{r}
+sqrt(s2/sum((dat.c$Commerce-mean(dat.c$Commerce))^2))
+summary(m.c.w)$coefficients[2,2]
+
+
+# Calculate the p-value of the slope from the definition.
+2*pt(-abs(summary(m.c.w)$coefficients[2,1]/summary(m.c.w)$coefficients[2,2]),df=n-2)
+
+# Verify that this is the p-value from the summary.
+summary(m.c.w)$coefficients[2,4] 
+
+
+
+```
+
+## Standard error of intercept
+
+*Recall that $$s^2\left(\frac{1}{n}+\frac{\bar{X}^2}{\sum_{i=1}^n\left(X_i-\bar{X}\right)^2}\right)$$ is a formula for the standard error of the intercept. This is equivalent to $s^2\left(\frac{1}{n}+\frac{\bar{X}^2}{\sum_{i=1}^nX_i^2-n\bar{X}^2}\right)$.*
+
+```{r}
+sqrt(s2*(1/n+mean(dat.c$Commerce)^2/sum((dat.c$Commerce-mean(dat.c$Commerce))^2)))
+summary(m.c.w)$coefficients[1,2] # Verify this is the Std. Error from the summary.
+
+
+# Calculate the p-value of the intercept from the definition.
+2*pt(-abs(summary(m.c.w)$coefficients[1,1]/summary(m.c.w)$coefficients[1,2]),df=n-2)
+
+# Verify that this is the p-value from the summary.
+summary(m.c.w)$coefficients[1,4] 
+```
+
+
+## Predicted Y Random Variables
+
+In the model that $Y$ is a linear function of $X$ plus iid Normal errors $\varepsilon$, the maximum likelihood slope and intercept are random variables, functions of $\varepsilon$. Thus the predicted value of $\hat Y_h$ at $X_h$ is a random variable distributed as $\hat{Y}_{h}\sim Normal\left(mX_{h}+b,\sigma^{2}\left(\frac{1}{n}+\frac{\left(X_{h}-\bar{X}\right)^{2}}{\sum\left(X_{i}-\bar{X}\right)^{2}}\right)\right)$. The confidence interval based on this uses the corresponding Student's t distribution with $n-2$ degrees of freedom, replacing $\sigma^2$ by $s^2$, that is $\frac{SSE}{n-2}$.
+
+```{r}
+
+g<-ggplot(data=dat.c,aes(x=Commerce,y=Wealth))+geom_point()
+g<-g+geom_abline(slope=m.c.w$coefficients[2],intercept=m.c.w$coefficients[1])
+g
+
+```
+
+### Look at 95% conf. interval for Y.pred
+
+```{r}
+x.new<-seq(min(dat.c$Commerce),max(dat.c$Commerce),length.out=50)
+temp<-data.frame(Commerce=x.new)
+y.pred<-predict(m.c.w,newdata=temp)
+```
+
+### function to calculate variance for the mean of a new observation
+
+```{r}
+s2.new<-function(newx,x,s2){
+	n<-length(x)
+	return(s2*(1/n+(newx-mean(x))^2/sum((x-mean(x))^2)))
+}
+```
+
+### Generate vector of upper and lower bounds for the means 
+
+Use the 95% confidence interval. Plot the results.
+
+```{r}
+s2s<-s2.new(x.new,dat.c$Commerce,s2) # variance of the mean of an observation at x.new
+a<-qt(.975,n-2) # .975 quantile for Student's t with n-2 degrees of freedom
+upper<-y.pred+a*sqrt(s2s) # upper bound of 95% CI on y.pred
+lower<-y.pred-a*sqrt(s2s) # lower bound of 95% CI on y.pred
+
+dat.new<-data.frame(x=x.new,lower=lower,upper=upper)
+g<-ggplot(dat.c,aes(x=Commerce,y=Wealth))+geom_point()+geom_smooth(method="lm")+
+  geom_line(data=dat.new,aes(x=x,y=lower),color="green")+
+  geom_line(data=dat.new,aes(x=x,y=upper),color="green")
+g
+
+```
+
+The distribution of a new $\hat Y_h new$ is given by $\hat{Y}_{h}new\sim Normal\left(mX_{h}+b,\sigma^{2}\left(\frac{n+1}{n}+\frac{\left(X_{h}-\bar{X}\right)^{2}}{\sum\left(X_{i}-\bar{X}\right)^{2}}\right)\right)$. Again, the confidence intervals corresponding to this use a Student's t distribution with $n-2$ degrees of freedom, replacing $\sigma^2$ by $s^2$.
+
+# Practice 3
+
+*Please supply the upper and lower bounds on the 95% confidence intervals for new observations as the indicated columns in dat.new. Run the plotting commands to view these bounds.*
+
+```{r}
+# y.pred.new, with error
+dat.new$upper.w.error<-y.pred+a*sqrt(s2s+s2)
+dat.new$lower.w.error<-y.pred-a*sqrt(s2s+s2)
+g<-g+geom_line(data=dat.new,aes(x=x,y=lower.w.error),color="orange")+
+  geom_line(data=dat.new,aes(x=x,y=upper.w.error),color="orange")
+g
+```
