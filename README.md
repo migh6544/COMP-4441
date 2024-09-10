@@ -5,9 +5,8 @@ and interpretation of data analyses to address research questions. The course pr
 introduction to the use of R and RStudio for statistical programming.
 
 
-# Objectives and Course Topics
+### Objectives
 
-### Students in this course will
   - Apply a range of data visualization methods
     
   - Develop models for data, and apply statistical techniques to assess the validity of the
@@ -30,7 +29,7 @@ sample means
     
   - Use basics of R, a widely used programming language for statistical analysis
     
-### Topics covered include
+### Topics
 
   - Fundamentals of probability spaces
   - Basic data visualization
